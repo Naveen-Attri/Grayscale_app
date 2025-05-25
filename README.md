@@ -12,6 +12,13 @@ This app performs real-time edge detection using the Android camera (CameraX), p
 -  Optimized for performance (RGBA conversion, grayscale toggle)
 -  FPS counter displayed on screen
 -  Multithreaded image analysis using `ImageAnalysis`
+---
+
+## Architecture Explanation
+1. CameraX captures frames in RBGA_8888 format using the imageanalysis analyzer callback
+2. Frame data in bytes array is passed to c++ code using jni(bridge between java and c++).
+3. Frame processing(grayscale) is performed in c++
+4. Opengl then uses the frames to create textures to render on the glSurfaceView whenever requestRender() is called.
 
 ---
 
