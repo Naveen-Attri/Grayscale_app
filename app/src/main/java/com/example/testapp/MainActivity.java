@@ -6,8 +6,10 @@ import android.graphics.Bitmap;
 import android.opengl.GLSurfaceView;
 import android.os.Bundle;
 import android.util.Size;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private ExecutorService cameraExecutor;
     Boolean applyFilter = false;
     Button filterButton;
+    TextView fpsCounter;
     GLSurfaceView glSurfaceView;
     MyGLRenderer renderer;
 
@@ -54,13 +57,18 @@ public class MainActivity extends AppCompatActivity {
         glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
         filterButton = findViewById(R.id.filterButton);
+        fpsCounter = findViewById(R.id.fpsCounter);
+        fpsCounter.setVisibility(View.GONE);
 
         filterButton.setOnClickListener(v -> {
             applyFilter = !applyFilter;
             if (applyFilter) {
                 filterButton.setText("Disable Filter");
+                fpsCounter.setVisibility(View.VISIBLE);
             } else {
                 filterButton.setText("Enable Filter");
+                fpsCounter.setVisibility(View.GONE);
+
             }
         });
 
@@ -115,10 +123,11 @@ public class MainActivity extends AppCompatActivity {
 
                     long currentTime = System.currentTimeMillis();
 
-                    if (frameCount == 100) {
+                    if (frameCount == 10) {
                         long elapsedTime = currentTime - startTime;
                         float fps = (float) (1000 * frameCount) / elapsedTime;
                         Log.i("FPS", "Average FPS: " + fps);
+                        runOnUiThread(() -> fpsCounter.setText(String.format("FPS: %.2f", fps)));
 
                         frameCount = 0;
                         startTime = currentTime;
@@ -160,18 +169,6 @@ public class MainActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-//    private void processImage(ImageProxy image) {
-//        ImageProxy.PlaneProxy plane = image.getPlanes()[0];
-//        ByteBuffer buffer = plane.getBuffer();
-//
-//        byte[] rgba = new byte[buffer.remaining()];
-//        buffer.get(rgba);
-//
-//        // Pass directly to your native OpenCV function
-//        processFrame(rgba, image.getWidth(), image.getHeight());
-//
-//        image.close();
-//    }
 
 
     @Override
