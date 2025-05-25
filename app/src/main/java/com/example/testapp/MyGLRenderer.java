@@ -1,7 +1,5 @@
 package com.example.testapp;
 
-import static androidx.camera.core.processing.util.GLUtils.createTexture;
-
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 
@@ -78,7 +76,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
             hasNewFrame = false;
         }
 
-        // Draw textured quad (write your own shader + draw logic here)
         drawTexturedQuad(textureId);
     }
 
@@ -105,22 +102,18 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         int texCoordHandle = GLES20.glGetAttribLocation(programId, "a_TexCoord");
         int textureHandle = GLES20.glGetUniformLocation(programId, "u_Texture");
 
-        // Enable and set vertex attributes
         GLES20.glEnableVertexAttribArray(positionHandle);
         GLES20.glVertexAttribPointer(positionHandle, 2, GLES20.GL_FLOAT, false, 0, vertexBuffer);
 
         GLES20.glEnableVertexAttribArray(texCoordHandle);
         GLES20.glVertexAttribPointer(texCoordHandle, 2, GLES20.GL_FLOAT, false, 0, texCoordBuffer);
 
-        // Bind texture
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
         GLES20.glUniform1i(textureHandle, 0);
 
-        // Draw quad
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
 
-        // Cleanup
         GLES20.glDisableVertexAttribArray(positionHandle);
         GLES20.glDisableVertexAttribArray(texCoordHandle);
     }

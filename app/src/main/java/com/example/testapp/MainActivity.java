@@ -38,7 +38,6 @@ public class MainActivity extends AppCompatActivity {
     long startTime = 0;
     private int frameCount = 0;
 
-    // Load native library
     public native void processFrame(byte[] frameData, int width, int height, boolean applyFilter);
     static {
         System.loadLibrary("testapp");

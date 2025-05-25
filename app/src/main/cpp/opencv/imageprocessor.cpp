@@ -11,7 +11,6 @@ Java_com_example_testapp_MainActivity_processFrame(JNIEnv *env, jobject thiz, jb
                                                    jint width, jint height, jboolean applyFilter) {
     jbyte* data = env->GetByteArrayElements(frameData, nullptr);
 
-    // Construct RGBA image
     cv::Mat rgba(height, width, CV_8UC4, reinterpret_cast<uchar*>(data));
 
     // Convert RGBA to Grayscale
