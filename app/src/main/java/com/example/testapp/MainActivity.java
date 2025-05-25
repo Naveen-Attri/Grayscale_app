@@ -1,0 +1,166 @@
+package com.example.testapp;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.opengl.GLSurfaceView;
+import android.os.Bundle;
+import android.util.Size;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import androidx.camera.core.CameraSelector;
+import android.util.Log;
+import java.nio.ByteBuffer;
+import com.google.common.util.concurrent.ListenableFuture;
+
+public class MainActivity extends AppCompatActivity {
+    private static final int PERMISSION_REQUEST_CODE = 100;
+    private ExecutorService cameraExecutor;
+    Boolean applyFilter = false;
+    Button filterButton;
+    GLSurfaceView glSurfaceView;
+    MyGLRenderer renderer;
+    // Load native library
+    public native void processFrame(byte[] frameData, int width, int height, boolean applyFilter);
+    static {
+        System.loadLibrary("testapp");
+    }
+
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main); // Your layout with TextureView (optional)
+
+        cameraExecutor = Executors.newSingleThreadExecutor();
+        glSurfaceView = findViewById(R.id.grayImage);
+        glSurfaceView.setEGLContextClientVersion(2);
+        assert glSurfaceView != null;
+        renderer = new MyGLRenderer();
+        glSurfaceView.setRenderer(renderer);
+        glSurfaceView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
+
+        filterButton = findViewById(R.id.filterButton);
+
+        filterButton.setOnClickListener(v -> {
+            applyFilter = !applyFilter;
+            if (applyFilter) {
+                filterButton.setText("Disable Filter");
+            } else {
+                filterButton.setText("Enable Filter");
+            }
+        });
+
+
+        if (allPermissionsGranted()) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.CAMERA},
+                    PERMISSION_REQUEST_CODE
+            );
+        }
+    }
+
+    private boolean allPermissionsGranted() {
+        return ContextCompat.checkSelfPermission(
+                this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (allPermissionsGranted()) {
+                startCamera();
+            } else {
+                Toast.makeText(this,
+                        "Permissions not granted by the user.",
+                        Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+
+                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
+                        .setTargetResolution(new Size(640, 480))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+                imageAnalysis.setAnalyzer(cameraExecutor, image -> {
+//                    int rotation = image.getImageInfo().getRotationDegrees(); // Typically 90 or 270
+
+                    // The image is now in RGBA_8888 format, accessible as a single plane
+                    ImageProxy.PlaneProxy plane = image.getPlanes()[0];
+                    ByteBuffer buffer = plane.getBuffer();
+
+                    byte[] rgba = new byte[buffer.remaining()];
+                    buffer.get(rgba);
+
+                    processFrame(rgba, image.getWidth(), image.getHeight(), applyFilter);
+
+                    // Create a Bitmap to show processed frame
+//                    Bitmap bitmap = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+//                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgba));
+//
+//                    runOnUiThread(() -> imageView.setImageBitmap(bitmap));
+
+                    renderer.updateFrame(rgba, image.getWidth(), image.getHeight());
+                    runOnUiThread(() -> {
+                        if (glSurfaceView != null) {
+                            glSurfaceView.requestRender();
+                        }
+                    });
+
+                    image.close();
+                });
+
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+
+                cameraProvider.unbindAll();
+                cameraProvider.bindToLifecycle(this, cameraSelector, imageAnalysis);
+
+            } catch (Exception e) {
+                Log.e("CameraX", "Use case binding failed", e);
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+
+//    private void processImage(ImageProxy image) {
+//        ImageProxy.PlaneProxy plane = image.getPlanes()[0];
+//        ByteBuffer buffer = plane.getBuffer();
+//
+//        byte[] rgba = new byte[buffer.remaining()];
+//        buffer.get(rgba);
+//
+//        // Pass directly to your native OpenCV function
+//        processFrame(rgba, image.getWidth(), image.getHeight());
+//
+//        image.close();
+//    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cameraExecutor.shutdown();
+    }
+}
