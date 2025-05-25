@@ -17,8 +17,6 @@ This app performs real-time edge detection using the Android camera (CameraX), p
 
 ## Screenshots / GIF
 
-> Add actual media here
-
 | Camera Feed | OpenGL Processed Output |
 |-------------|-------------------------|
 | ![Camera](screenshots/camera_preview.jpg) | ![Processed](screenshots/processed_frame.jpg) |
@@ -29,14 +27,17 @@ This app performs real-time edge detection using the Android camera (CameraX), p
 
 ### Prerequisites
 
-- Android Studio (Arctic Fox or newer)
-- Android NDK (version 23 or later recommended)
-- CMake and LLDB (installed via SDK Tools)
+- Android Studio - newer versions are recommended
+- Android NDK
+- CMake and LLDB (installed via SDK Tools) - will be done automatically by gradle
 - OpenCV Android SDK
+  1. Download openCV from: [OpenCV](https://opencv.org/releases/)
+  2. Extract the files and copy the sdk(found in the extracted files) folder to the root directory of the project
+  3. Fire Up Android Studio then go to File > New > Import Module. Then browse to the sdk folder and give the module an appropriate name(opencv)
+  4. Then Go to File > Project Structure > Dependencies > click + in declared dependecies section > add module dependencies > click on the module you imported just now
 
 ###  Installation
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/EdgeDetectApp.git
-   cd EdgeDetectApp
