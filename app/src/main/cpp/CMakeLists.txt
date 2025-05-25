@@ -28,7 +28,6 @@ find_package(OpenCV REQUIRED)
 # used in the AndroidManifest.xml file.
 add_library(${CMAKE_PROJECT_NAME} SHARED
         # List C/C++ source files with relative paths to this CMakeLists.txt.
-        opencv/native-lib.cpp
         opencv/imageprocessor.cpp)
 
 # Specifies libraries CMake should link to your target library. You

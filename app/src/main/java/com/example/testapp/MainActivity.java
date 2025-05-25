@@ -30,6 +30,11 @@ public class MainActivity extends AppCompatActivity {
     Button filterButton;
     GLSurfaceView glSurfaceView;
     MyGLRenderer renderer;
+
+    // For performance measurement
+    long startTime = 0;
+    private int frameCount = 0;
+
     // Load native library
     public native void processFrame(byte[] frameData, int width, int height, boolean applyFilter);
     static {
@@ -106,9 +111,19 @@ public class MainActivity extends AppCompatActivity {
                         .build();
 
                 imageAnalysis.setAnalyzer(cameraExecutor, image -> {
-//                    int rotation = image.getImageInfo().getRotationDegrees(); // Typically 90 or 270
+                    frameCount++;
 
-                    // The image is now in RGBA_8888 format, accessible as a single plane
+                    long currentTime = System.currentTimeMillis();
+
+                    if (frameCount == 100) {
+                        long elapsedTime = currentTime - startTime;
+                        float fps = (float) (1000 * frameCount) / elapsedTime;
+                        Log.i("FPS", "Average FPS: " + fps);
+
+                        frameCount = 0;
+                        startTime = currentTime;
+                    }
+
                     ImageProxy.PlaneProxy plane = image.getPlanes()[0];
                     ByteBuffer buffer = plane.getBuffer();
 
@@ -117,11 +132,12 @@ public class MainActivity extends AppCompatActivity {
 
                     processFrame(rgba, image.getWidth(), image.getHeight(), applyFilter);
 
-                    // Create a Bitmap to show processed frame
+                    // for directly displaying the image in ImageView (if needed)
 //                    Bitmap bitmap = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
 //                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(rgba));
 //
 //                    runOnUiThread(() -> imageView.setImageBitmap(bitmap));
+
 
                     renderer.updateFrame(rgba, image.getWidth(), image.getHeight());
                     runOnUiThread(() -> {
