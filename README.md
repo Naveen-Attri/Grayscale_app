@@ -38,10 +38,9 @@ This app performs real-time edge detection using the Android camera (CameraX), p
 - Android NDK
 - CMake and LLDB (installed via SDK Tools) - will be done automatically by gradle
 - OpenCV Android SDK
-  1. Download openCV from: [OpenCV](https://opencv.org/releases/)
-  2. Extract the files and copy the sdk(found in the extracted files) folder to the root directory of the project
-  3. Fire Up Android Studio then go to File > New > Import Module. Then browse to the sdk folder and give the module an appropriate name(opencv)
-  4. Then Go to File > Project Structure > Dependencies > click + in declared dependecies section > add module dependencies > click on the module you imported just now
+
+  Note: Everything will be installed/downloaded by the android studio. Just Clone the repo and let the studio do its magic. All you need is a emulator or a physical device to run the app
+
 
 ###  Installation
 
